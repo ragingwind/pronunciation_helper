@@ -433,7 +433,15 @@
             font-size: 0.9rem;
             font-weight: 700;
             color: var(--accent-primary);
-            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.4rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tips-title > span {
             display: flex;
             align-items: center;
             gap: 0.4rem;
@@ -443,9 +451,14 @@
             list-style: none;
             font-size: 0.9rem;
             color: var(--text-secondary);
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 0.3rem;
+        }
+
+        .tips-list.open {
+            display: flex;
+            margin-top: 0.6rem;
         }
 
         .tips-list li {
@@ -540,7 +553,7 @@
             border-radius: 16px;
             padding: 1.2rem;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 1rem;
+            margin-bottom: 1.2rem;
             animation: fadeIn 0.4s ease forwards;
         }
 
@@ -693,10 +706,25 @@
                 <!-- Translation text will populate here -->
             </div>
 
-            <!-- Pronunciation Tips -->
+            <!-- Feedback -->
+            <div class="feedback-panel" id="feedbackPanel" style="display: none;">
+                <div class="feedback-title">
+                    <span id="feedbackTarget">발음 분석 결과</span>
+                    <span class="score-badge" id="scoreBadge">0% Match</span>
+                </div>
+                <div class="comparison" id="comparisonResult">
+                    <!-- Target words highlighting -->
+                </div>
+                <div class="user-transcript" id="userTranscript">
+                    내가 발음한 내용: "..."
+                </div>
+            </div>
+
+            <!-- Pronunciation Tips (collapsed by default) -->
             <div class="pronunciation-tips">
-                <div class="tips-title">
-                    <i class="fa-solid fa-lightbulb"></i> 발음 & 연음 팁
+                <div class="tips-title" id="tipsHeader">
+                    <span><i class="fa-solid fa-lightbulb"></i> 발음 & 연음 팁</span>
+                    <i class="fa-solid fa-chevron-down" id="tipsIcon"></i>
                 </div>
                 <ul class="tips-list" id="tipsList">
                     <!-- Dynamic tips -->
@@ -710,20 +738,6 @@
                 </div>
                 <div class="verb-list" id="verbListContainer">
                     <!-- Verb entries dynamically populated -->
-                </div>
-            </div>
-
-            <!-- Feedback -->
-            <div class="feedback-panel" id="feedbackPanel" style="display: none;">
-                <div class="feedback-title">
-                    <span id="feedbackTarget">발음 분석 결과</span>
-                    <span class="score-badge" id="scoreBadge">0% Match</span>
-                </div>
-                <div class="comparison" id="comparisonResult">
-                    <!-- Target words highlighting -->
-                </div>
-                <div class="user-transcript" id="userTranscript">
-                    내가 발음한 내용: "..."
                 </div>
             </div>
         </div>
@@ -1058,6 +1072,8 @@
         const sentenceContainer = document.getElementById('sentenceContainer');
         const translationContainer = document.getElementById('translationContainer');
         const tipsList = document.getElementById('tipsList');
+        const tipsHeader = document.getElementById('tipsHeader');
+        const tipsIcon = document.getElementById('tipsIcon');
         const stepIndicator = document.getElementById('stepIndicator');
         const progressBar = document.getElementById('progressBar');
         
@@ -1559,6 +1575,14 @@
                 activeChunkIndex = 0;
                 renderSentence();
             }
+        });
+
+        // Collapsible Pronunciation Tips Toggle
+        tipsHeader.addEventListener('click', () => {
+            tipsList.classList.toggle('open');
+            tipsIcon.className = tipsList.classList.contains('open')
+                ? "fa-solid fa-chevron-up"
+                : "fa-solid fa-chevron-down";
         });
 
         // Collapsible Editor Toggle (At the top)
