@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영어 끊어 읽기 & 발음 교정 도우미</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-primary: #818cf8;
+            --accent-secondary: #c084fc;
+            --success: #34d399;
+            --danger: #f87171;
+            --warning: #fbbf24;
+            --info: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 0.2rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.2rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .notice-banner {
+            background: rgba(129, 140, 248, 0.15);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            color: #c7d2fe;
+            padding: 0.7rem 1.2rem;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .notice-banner i {
+            font-size: 1.1rem;
+            color: var(--accent-secondary);
+        }
+
+        /* Model Loading Overlay/Indicator */
+        .model-loading-indicator {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 16px;
+            padding: 1rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .model-loading-title {
+            font-weight: 700;
+            color: var(--warning);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .model-loading-progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .model-loading-progress {
+            height: 100%;
+            width: 0%;
+            background: var(--warning);
+            transition: width 0.2s ease;
+        }
+
+        /* Collapsible Sentence Editor (At the top) */
+        .editor-section {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .editor-header {
+            padding: 0.8rem 1.2rem;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            user-select: none;
+        }
+
+        .editor-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .editor-content {
+            padding: 1.2rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.8rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .editor-content.open {
+            display: flex;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            padding: 0.8rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .update-btn {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border: none;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            align-self: flex-end;
+        }
+
+        .update-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 1.8rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 1.2rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
+            transition: width 0.3s ease;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .step-indicator {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Redesigned Control Dashboard Bar (Mode + Controls side-by-side) */
+        .control-dashboard-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 1rem;
+        }
+
+        /* Left Side: Modes */
+        .mode-selector {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 0.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 0.2rem;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 9px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* Right Side: Speeches */
+        .speech-trigger-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .compact-action-btn {
+            padding: 0.45rem 0.9rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-listen {
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        .btn-listen:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-speak {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-speak:hover {
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-speak.recording {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .engine-badge {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .sentence-display {
+            font-size: 1.45rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .chunk {
+            display: inline-block;
+            padding: 0.15rem 0.45rem;
+            margin: 0.15rem;
+            border-radius: 8px;
+            background: rgba(129, 140, 248, 0.08);
+            border: 1px solid rgba(129, 140, 248, 0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chunk:hover {
+            background: rgba(129, 140, 248, 0.2);
+        }
+
+        .chunk.active {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border-color: transparent;
+            box-shadow: 0 0 10px rgba(129, 140, 248, 0.25);
+            color: white;
+        }
+
+        /* Styles for Full sentence mode */
+        .sentence-display.full-mode .chunk {
+            background: transparent;
+            border-color: transparent;
+            cursor: default;
+            padding: 0;
+            margin: 0 0.15rem;
+        }
+        .sentence-display.full-mode .chunk.active {
+            background: transparent;
+            box-shadow: none;
+            color: var(--text-primary);
+        }
+
+        .translation-display {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1.2rem;
+            border-left: 3px solid var(--accent-secondary);
+            padding-left: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .literal-highlight {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .natural-highlight {
+            color: #cbd5e1;
+            font-style: italic;
+            font-size: 0.95rem;
+            display: block;
+            margin-top: 0.3rem;
+        }
+
+        .pronunciation-tips {
+            background: rgba(255, 255, 255, 0.015);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            padding: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .tips-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .tips-list {
+            list-style: none;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .tips-list li {
+            position: relative;
+            padding-left: 1.2rem;
+        }
+
+        .tips-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-secondary);
+            font-weight: bold;
+        }
+
+        /* Verb Dictionary Styling */
+        .verb-dictionary {
+            background: rgba(56, 189, 248, 0.04);
+            border: 1px solid rgba(56, 189, 248, 0.12);
+            border-radius: 16px;
+            padding: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .verb-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--info);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .verb-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .verb-item {
+            border-left: 2px solid var(--info);
+            padding-left: 0.8rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .verb-header-row {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.1rem;
+        }
+
+        .verb-word {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .verb-phonetic {
+            font-family: 'Outfit', sans-serif;
+            color: var(--info);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .verb-meaning {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .verb-example {
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.85rem;
+            margin-top: 0.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .verb-example i {
+            color: var(--info);
+            font-size: 0.75rem;
+        }
+
+        /* Feedback styling */
+        .feedback-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 1rem;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .score-badge {
+            padding: 0.25rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .score-high { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+        .score-mid { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .score-low { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+
+        .comparison {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-top: 0.4rem;
+        }
+
+        .word-match { color: var(--success); font-weight: 600; }
+        .word-mismatch { color: var(--danger); text-decoration: line-through; font-weight: 600; }
+        
+        .user-transcript {
+            margin-top: 0.6rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .unsupported-notice {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>English Pronunciation Helper</h1>
+            <p>문장을 한 청크씩 끊어 듣고, 직접 말하며 발음을 교정해보세요.</p>
+        </header>
+
+        <div class="notice-banner">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>
+                <strong>로컬 AI 모드 탑재:</strong> 구글 연결 차단 시 인터넷 연결이 필요 없는 <strong>온디바이스 AI 발음 분석 엔진(Whisper)</strong>으로 자동 전환되어 평가를 진행합니다!
+            </div>
+        </div>
+
+        <!-- Local Model Loading Info -->
+        <div class="model-loading-indicator" id="modelLoadingIndicator">
+            <div class="model-loading-title">
+                <i class="fa-solid fa-gear fa-spin"></i> <span id="modelLoadingText">온디바이스 AI 발음 분석 엔진(Whisper-tiny) 초기화 중... (처음 1회만 약 30초 소요)</span>
+            </div>
+            <div class="model-loading-progress-bar">
+                <div class="model-loading-progress" id="modelLoadingProgress"></div>
+            </div>
+        </div>
+
+        <div id="browser-warning" class="unsupported-notice">
+            <i class="fa-solid fa-triangle-exclamation"></i> 이 브라우저는 일부 음성 인식 API를 완벽하게 지원하지 않을 수 있습니다. <strong>Google Chrome</strong> 브라우저를 권장합니다.
+        </div>
+
+        <!-- Sentence Editor (Moved to the Top) -->
+        <div class="editor-section">
+            <div class="editor-header" id="editorHeader">
+                <span><i class="fa-solid fa-pen-to-square"></i> 연습 문장 및 해석 업데이트</span>
+                <i class="fa-solid fa-chevron-down" id="editorIcon"></i>
+            </div>
+            <div class="editor-content" id="editorContent">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
+                    연습하고 싶은 <strong>영어 문장들만 한 줄씩</strong> 자유롭게 입력하셔도 되고, <strong>한글 번역을 함께 매칭</strong>하고 싶다면 영어 문장과 한글 해석을 번갈아 한 줄씩 적어주세요.
+                    <br>• <strong>영어 지문만 입력 시</strong>: 한 줄에 한 문장씩 적어주시면 됩니다. (슬래시 <code>/</code> 로 끊어 읽기 지정 가능)
+                    <br>• <strong>영어/한글 번역 함께 입력 시</strong>: 홀수 줄에는 영어 문장, 짝수 줄에는 한글 해석 [ 직독직해 (의역) 형태 권장 ] 순으로 적어주세요.
+                </p>
+                <textarea id="txtEditorInput" placeholder="영어 문장만 여러 줄 입력하거나, 한글 번역을 한 줄씩 번갈아 입력하세요...&#10;예시 1 (영어 지문만 입력):&#10;These days, / almost every student / has a smartphone.&#10;Some people say / phones are helpful, / but others think / they cause many problems.&#10;&#10;예시 2 (영어 + 번역 함께 입력):&#10;These days, / almost every student / has a smartphone.&#10;요즘에는, / 거의 모든 학생들은 / 스마트폰을 가지고 있습니다. (요즘에는 거의 모든 학생들이 스마트폰을 가지고 있습니다.)"></textarea>
+                <button class="update-btn" id="btnUpdateSentences">적용하여 새로 연습하기</button>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card">
+            <!-- Progress -->
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <!-- Nav -->
+            <div class="navigation">
+                <button class="nav-btn" id="btnPrev" disabled><i class="fa-solid fa-chevron-left"></i> 이전</button>
+                <div class="step-indicator" id="stepIndicator">Sentence 1 of 10</div>
+                <button class="nav-btn" id="btnNext">다음 <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <!-- Dashboard Control Bar (Combined Modes & Speeches Side-by-Side) -->
+            <div class="control-dashboard-bar">
+                <!-- Left: Mode selector toggles -->
+                <div class="mode-selector">
+                    <button class="mode-btn active" id="modeChunk">
+                        <i class="fa-solid fa-scissors"></i> 끊기
+                    </button>
+                    <button class="mode-btn" id="modeFull">
+                        <i class="fa-solid fa-paragraph"></i> 전체
+                    </button>
+                </div>
+                
+                <!-- Right: Action Speeches Buttons -->
+                <div class="speech-trigger-group">
+                    <button class="compact-action-btn btn-listen" id="btnListen">
+                        <i class="fa-solid fa-volume-high"></i> <span id="listenText">구절 듣기</span>
+                    </button>
+                    <button class="compact-action-btn btn-speak" id="btnSpeak">
+                        <i class="fa-solid fa-microphone"></i> <span id="speakText">구절 평가</span>
+                    </button>
+                </div>
+
+                <!-- Engine indicator -->
+                <span class="engine-badge" id="engineStatusBadge">구글 AI (온라인)</span>
+            </div>
+
+            <!-- Sentence Display -->
+            <div class="sentence-display" id="sentenceContainer">
+                <!-- Chunks are dynamically created -->
+            </div>
+
+            <!-- Translation (Literal & Natural Translation format) -->
+            <div class="translation-display" id="translationContainer">
+                <!-- Translation text will populate here -->
+            </div>
+
+            <!-- Pronunciation Tips -->
+            <div class="pronunciation-tips">
+                <div class="tips-title">
+                    <i class="fa-solid fa-lightbulb"></i> 발음 & 연음 팁
+                </div>
+                <ul class="tips-list" id="tipsList">
+                    <!-- Dynamic tips -->
+                </ul>
+            </div>
+
+            <!-- Dynamic Verb Dictionary Card -->
+            <div class="verb-dictionary" id="verbDictionaryCard">
+                <div class="verb-title">
+                    <i class="fa-solid fa-book-open"></i> 문장 내 주요 동사 사전
+                </div>
+                <div class="verb-list" id="verbListContainer">
+                    <!-- Verb entries dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div class="feedback-panel" id="feedbackPanel" style="display: none;">
+                <div class="feedback-title">
+                    <span id="feedbackTarget">발음 분석 결과</span>
+                    <span class="score-badge" id="scoreBadge">0% Match</span>
+                </div>
+                <div class="comparison" id="comparisonResult">
+                    <!-- Target words highlighting -->
+                </div>
+                <div class="user-transcript" id="userTranscript">
+                    내가 발음한 내용: "..."
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Transformers.js CDN (ES Module) -->
+    <script type="module">
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.14.0';
+
+        // Configure Transformers env
+        env.allowLocalModels = false;
+
+        // Global Variables
+        window.whisperPipeline = null;
+        window.isWhisperLoading = false;
+        window.useLocalWhisper = false;
+
+        // Check if SpeechRecognition is supported
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            document.getElementById('browser-warning').style.display = 'block';
+            switchToLocalWhisperEngine(true);
+        }
+
+        // Expose model loader to window
+        window.loadWhisperModel = async function(onProgress) {
+            if (window.whisperPipeline) return window.whisperPipeline;
+            window.isWhisperLoading = true;
+            
+            const loaderIndicator = document.getElementById('modelLoadingIndicator');
+            const loaderProgress = document.getElementById('modelLoadingProgress');
+            const loaderText = document.getElementById('modelLoadingText');
+            
+            loaderIndicator.style.display = 'flex';
+            loaderProgress.style.width = '5%';
+            loaderText.textContent = '온디바이스 AI 발음 분석기(Whisper-tiny.en) 모듈 로드 중...';
+            
+            try {
+                window.whisperPipeline = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', {
+                    progress_callback: (data) => {
+                        if (data.status === 'progress') {
+                            const percent = Math.round(data.loaded / data.total * 100);
+                            loaderProgress.style.width = `${percent}%`;
+                            loaderText.textContent = `AI 모델 다운로드 중: ${data.file.split('/').pop()} (${percent}%)`;
+                        } else if (data.status === 'ready') {
+                            loaderText.textContent = 'AI 모델 파일 초기화 준비 완료...';
+                        }
+                    }
+                });
+                
+                loaderText.textContent = '온디바이스 AI 모델 로딩 완료!';
+                loaderProgress.style.width = '100%';
+                setTimeout(() => {
+                    loaderIndicator.style.display = 'none';
+                }, 1500);
+                
+                document.getElementById('engineStatusBadge').textContent = "로컬 AI Whisper";
+                document.getElementById('engineStatusBadge').style.background = "rgba(129, 140, 248, 0.2)";
+                document.getElementById('engineStatusBadge').style.color = "#818cf8";
+            } catch (err) {
+                console.error("Whisper Model Load Error:", err);
+                loaderText.textContent = 'AI 모델 파일 로딩 실패! (네트워크 상태 확인 요망)';
+                alert("온디바이스 AI 파일 로딩 중 에러가 발생했습니다: " + err.message);
+            }
+            window.isWhisperLoading = false;
+            return window.whisperPipeline;
+        };
+
+        window.switchToLocalWhisperEngine = function(shouldAlert) {
+            window.useLocalWhisper = true;
+            document.getElementById('engineStatusBadge').textContent = "로컬 AI (로딩 대기)";
+            document.getElementById('engineStatusBadge').style.background = "rgba(245, 158, 11, 0.2)";
+            document.getElementById('engineStatusBadge').style.color = "#fbbf24";
+            
+            // Warm up and pre-load model immediately
+            window.loadWhisperModel();
+        }
+    </script>
+
+    <script>
+        // Verb Database for dynamic mapping
+        const commonVerbsDB = {
+            // be & have & do
+            "be": { base: "be", phonetic: "/biː/", meaning: "~이다, 존재하다", example: "Be quiet, please." },
+            "am": { base: "be", phonetic: "/æm/", meaning: "~이다", example: "I am a student." },
+            "is": { base: "be", phonetic: "/ɪz/", meaning: "~이다", example: "This is a book." },
+            "are": { base: "be", phonetic: "/ɑːr/", meaning: "~이다", example: "We are students." },
+            "was": { base: "be", phonetic: "/wʌz/", meaning: "~이었다", example: "He was busy yesterday." },
+            "were": { base: "be", phonetic: "/wɜːr/", meaning: "~이었다", example: "They were happy." },
+            "have": { base: "have", phonetic: "/hæv/", meaning: "가지고 있다", example: "I have a big dream." },
+            "has": { base: "have", phonetic: "/hæv/", meaning: "가지고 있다", example: "He has a smart puppy." },
+            "had": { base: "have", phonetic: "/hæv/", meaning: "가지고 있었다", example: "They had a good time yesterday." },
+            "do": { base: "do", phonetic: "/duː/", meaning: "하다", example: "Just do it." },
+            "does": { base: "do", phonetic: "/duː/", meaning: "하다", example: "She does her homework." },
+            "did": { base: "do", phonetic: "/duː/", meaning: "했다", example: "We did a great job." },
+
+            // core communication
+            "say": { base: "say", phonetic: "/seɪ/", meaning: "말하다", example: "What did you say?" },
+            "says": { base: "say", phonetic: "/seɪ/", meaning: "말하다", example: "She says hello to you." },
+            "said": { base: "say", phonetic: "/seɪ/", meaning: "말했다", example: "He said nothing." },
+            "ask": { base: "ask", phonetic: "/æsk/", meaning: "묻다, 요청하다", example: "Ask me anything." },
+            "asks": { base: "ask", phonetic: "/æsk/", meaning: "요청하다", example: "He asks for help." },
+            "asked": { base: "ask", phonetic: "/æsk/", meaning: "물었다", example: "She asked a question." },
+            "talk": { base: "talk", phonetic: "/tɔːk/", meaning: "말하다, 대화하다", example: "We talk every day." },
+            "talks": { base: "talk", phonetic: "/tɔːk/", meaning: "대화하다", example: "He talks to his friend." },
+            "talked": { base: "talk", phonetic: "/tɔːk/", meaning: "대화했다", example: "They talked for hours." },
+            "speak": { base: "speak", phonetic: "/spiːk/", meaning: "말하다", example: "Do you speak English?" },
+            "speaks": { base: "speak", phonetic: "/spiːk/", meaning: "말하다", example: "He speaks very fast." },
+            "spoke": { base: "speak", phonetic: "/spiːk/", meaning: "말했다", example: "She spoke to the teacher." },
+            "tell": { base: "tell", phonetic: "/tel/", meaning: "말하다, 말해주다", example: "Tell me the truth." },
+            "tells": { base: "tell", phonetic: "/tel/", meaning: "말해주다", example: "He tells funny stories." },
+            "told": { base: "tell", phonetic: "/tel/", meaning: "말했다", example: "I told you so." },
+
+            // cognitive & emotional
+            "think": { base: "think", phonetic: "/θɪŋk/", meaning: "생각하다", example: "I think you are right." },
+            "thinks": { base: "think", phonetic: "/θɪŋk/", meaning: "생각하다", example: "Everybody thinks so." },
+            "thought": { base: "think", phonetic: "/θɪŋk/", meaning: "생각했다", example: "I thought you were asleep." },
+            "understand": { base: "understand", phonetic: "/ˌʌndərˈstænd/", meaning: "이해하다", example: "Do you understand this word?" },
+            "understands": { base: "understand", phonetic: "/ˌʌndərˈstænd/", meaning: "이해하다", example: "He understands how it works." },
+            "understood": { base: "understand", phonetic: "/ˌʌndərˈstænd/", meaning: "이해했다", example: "I understood your situation." },
+            "love": { base: "love", phonetic: "/lʌv/", meaning: "사랑하다, 매우 좋아하다", example: "I love learning languages." },
+            "loves": { base: "love", phonetic: "/lʌv/", meaning: "좋아하다", example: "She loves chocolate." },
+            "loved": { base: "love", phonetic: "/lʌv/", meaning: "사랑했다", example: "They loved each other." },
+            "like": { base: "like", phonetic: "/laɪk/", meaning: "좋아하다", example: "I like this place." },
+            "likes": { base: "like", phonetic: "/laɪk/", meaning: "좋아하다", example: "He likes swimming." },
+            "liked": { base: "like", phonetic: "/laɪk/", meaning: "좋아했다", example: "We liked the movie." },
+            "agree": { base: "agree", phonetic: "/əˈriː/", meaning: "동의하다", example: "I agree with your idea." },
+            "agrees": { base: "agree", phonetic: "/əˈriː/", meaning: "동의하다", example: "He agrees to the plan." },
+            "agreed": { base: "agree", phonetic: "/əˈriː/", meaning: "동의했다", example: "They agreed on the terms." },
+            "disagree": { base: "disagree", phonetic: "/ˌdɪsəˈɡriː/", meaning: "의견이 다르다, 반대하다", example: "I disagree with that." },
+            "disagrees": { base: "disagree", phonetic: "/ˌdɪsəˈɡriː/", meaning: "반대하다", example: "She disagrees with him." },
+            "disagreed": { base: "disagree", phonetic: "/ˌdɪsəˈɡriː/", meaning: "반대했다", example: "They disagreed with the decision." },
+            "want": { base: "want", phonetic: "/wɑːnt/", meaning: "원하다", example: "I want to learn English." },
+            "wants": { base: "want", phonetic: "/wɑːnt/", meaning: "원하다", example: "He wants some coffee." },
+            "wanted": { base: "want", phonetic: "/wɑːnt/", meaning: "원했다", example: "She wanted to go home." },
+            "need": { base: "need", phonetic: "/niːd/", meaning: "필요하다", example: "I need some sleep." },
+            "needs": { base: "need", phonetic: "/niːd/", meaning: "필요하다", example: "He needs your advice." },
+            "needed": { base: "need", phonetic: "/niːd/", meaning: "필요했다", example: "We needed more time." },
+            "feel": { base: "feel", phonetic: "/fiːl/", meaning: "느끼다", example: "I feel great today." },
+            "feels": { base: "feel", phonetic: "/fiːl/", meaning: "느끼다", example: "She feels tired." },
+            "felt": { base: "feel", phonetic: "/fiːl/", meaning: "느꼈다", example: "He felt happy." },
+
+            // physical actions & utility
+            "wear": { base: "wear", phonetic: "/wer/", meaning: "입고 있다, 착용하다", example: "You should wear a uniform." },
+            "wears": { base: "wear", phonetic: "/wer/", meaning: "입다", example: "She wears glasses." },
+            "wore": { base: "wear", phonetic: "/wer/", meaning: "입었다", example: "He wore a blue shirt." },
+            "save": { base: "save", phonetic: "/seɪv/", meaning: "아끼다, 저장하다, 구하다", example: "This app saves time." },
+            "saves": { base: "save", phonetic: "/seɪv/", meaning: "절약하다", example: "It saves a lot of energy." },
+            "saved": { base: "save", phonetic: "/seɪv/", meaning: "구했다", example: "The doctor saved his life." },
+            "choose": { base: "choose", phonetic: "/tʃuːz/", meaning: "선택하다, 고르다", example: "Choose the best answer." },
+            "chooses": { base: "choose", phonetic: "/tʃuːz/", meaning: "선택하다", example: "She chooses a dress." },
+            "chose": { base: "choose", phonetic: "/tʃuːz/", meaning: "선택했다", example: "I chose this laptop." },
+            "show": { base: "show", phonetic: "/ʃoʊ/", meaning: "보여주다", example: "Show me your ticket." },
+            "shows": { base: "show", phonetic: "/ʃoʊ/", meaning: "보여주다", example: "The map shows the way." },
+            "showed": { base: "show", phonetic: "/ʃoʊ/", meaning: "보여주었다", example: "He showed me his room." },
+            "bring": { base: "bring", phonetic: "/brɪŋ/", meaning: "가져오다, 데려오다", example: "Bring me the book." },
+            "brings": { base: "bring", phonetic: "/brɪŋ/", meaning: "가져다주다", example: "Rain brings flowers." },
+            "brought": { base: "bring", phonetic: "/brɪŋ/", meaning: "가져왔다", example: "She brought some food." },
+            "limit": { base: "limit", phonetic: "/ˈlɪmɪt/", meaning: "제한하다", example: "We must limit screen time." },
+            "limits": { base: "limit", phonetic: "/ˈlɪmɪt/", meaning: "제한하다", example: "The rule limits choices." },
+            "limited": { base: "limit", phonetic: "/ˈlɪmɪt/", meaning: "제한했다", example: "They limited our access." },
+            
+            // basic movement & activities
+            "go": { base: "go", phonetic: "/ɡoʊ/", meaning: "가다", example: "Let's go together." },
+            "goes": { base: "go", phonetic: "/ɡoʊ/", meaning: "가다", example: "She goes to school." },
+            "went": { base: "go", phonetic: "/ɡoʊ/", meaning: "갔다", example: "He went to bed early." },
+            "come": { base: "come", phonetic: "/kʌm/", meaning: "오다", example: "Come here, please." },
+            "comes": { base: "come", phonetic: "/kʌm/", meaning: "오다", example: "Winter comes after fall." },
+            "came": { base: "come", phonetic: "/kʌm/", meaning: "왔다", example: "They came to the party." },
+            "make": { base: "make", phonetic: "/meɪk/", meaning: "만들다", example: "Make a wish." },
+            "makes": { base: "make", phonetic: "/meɪk/", meaning: "만들다", example: "Practice makes perfect." },
+            "made": { base: "make", phonetic: "/meɪk/", meaning: "만들었다", example: "He made a mistake." },
+            "take": { base: "take", phonetic: "/teɪk/", meaning: "가져가다, 취하다", example: "Take a deep breath." },
+            "takes": { base: "take", phonetic: "/teɪk/", meaning: "필요로 하다, 시간이 걸리다", example: "It takes ten minutes." },
+            "took": { base: "take", phonetic: "/teɪk/", meaning: "가져갔다", example: "She took my pen." },
+            "get": { base: "get", phonetic: "/get/", meaning: "얻다, 받다, 되다", example: "Get some rest." },
+            "gets": { base: "get", phonetic: "/get/", meaning: "되다", example: "It gets cold at night." },
+            "got": { base: "get", phonetic: "/get/", meaning: "얻었다", example: "I got your message." },
+            "give": { base: "give", phonetic: "/ɡɪv/", meaning: "주다", example: "Give me a call." },
+            "gives": { base: "give", phonetic: "/ɡɪv/", meaning: "주다", example: "Sunlight gives us warmth." },
+            "gave": { base: "give", phonetic: "/ɡɪv/", meaning: "주었다", example: "He gave me a book." },
+
+            // search & process
+            "cause": { base: "cause", phonetic: "/kɔːz/", meaning: "원인이 되다, 일으키다", example: "Smoking can cause illness." },
+            "causes": { base: "cause", phonetic: "/kɔːz/", meaning: "일으키다", example: "Stress causes many problems." },
+            "caused": { base: "cause", phonetic: "/kɔːz/", meaning: "일으켰다", example: "The storm caused damage." },
+            "help": { base: "help", phonetic: "/help/", meaning: "돕다", example: "Can you help me?" },
+            "helps": { base: "help", phonetic: "/help/", meaning: "돕다", example: "Reading books helps you learn." },
+            "helped": { base: "help", phonetic: "/help/", meaning: "도왔다", example: "She helped me clean." },
+            "find": { base: "find", phonetic: "/faɪnd/", meaning: "찾다, 발견하다", example: "I need to find my keys." },
+            "finds": { base: "find", phonetic: "/faɪnd/", meaning: "찾다", example: "He finds solutions quickly." },
+            "found": { base: "find", phonetic: "/faɪnd/", meaning: "찾았다", example: "We found the answer." },
+            "search": { base: "search", phonetic: "/sɜːrtʃ/", meaning: "검색하다, 찾다", example: "Search the web." },
+            "searches": { base: "search", phonetic: "/sɜːrtʃ/", meaning: "검색하다", example: "He searches for news." },
+            "searched": { base: "search", phonetic: "/sɜːrtʃ/", meaning: "검색했다", example: "I searched everywhere." },
+            "keep": { base: "keep", phonetic: "/kiːp/", meaning: "유지하다, 계속하다", example: "Keep going." },
+            "keeps": { base: "keep", phonetic: "/kiːp/", meaning: "유지하다", example: "He keeps his room clean." },
+            "kept": { base: "keep", phonetic: "/kiːp/", meaning: "유지했다", example: "They kept their promise." },
+            
+            // media & entertainment
+            "play": { base: "play", phonetic: "/pleɪ/", meaning: "놀다, 경기하다, 연주하다", example: "Children play outside." },
+            "plays": { base: "play", phonetic: "/pleɪ/", meaning: "연주하다", example: "She plays the piano." },
+            "played": { base: "play", phonetic: "/pleɪ/", meaning: "경기했다", example: "We played soccer." },
+            "watch": { base: "watch", phonetic: "/wɑːtʃ/", meaning: "보다, 지켜보다", example: "I watch movies on weekends." },
+            "watches": { base: "watch", phonetic: "/wɑːtʃ/", meaning: "보다", example: "He watches the game." },
+            "watched": { base: "watch", phonetic: "/wɑːtʃ/", meaning: "보았다", example: "They watched a show." },
+            "lose": { base: "lose", phonetic: "/luːz/", meaning: "잃다, 지다", example: "Don't lose focus." },
+            "loses": { base: "lose", phonetic: "/luːz/", meaning: "잃다", example: "He loses keys often." },
+            "lost": { base: "lose", phonetic: "/luːz/", meaning: "잃었다", example: "She lost her way." },
+            "drop": { base: "drop", phonetic: "/drɑːp/", meaning: "떨어뜨리다, 떨어지다", example: "Be careful not to drop it." },
+            "drops": { base: "drop", phonetic: "/drɑːp/", meaning: "떨어지다", example: "The temperature drops." },
+            "dropped": { base: "drop", phonetic: "/drɑːp/", meaning: "떨어졌다", example: "Grades have dropped." },
+            "allow": { base: "allow", phonetic: "/əˈlaʊ/", meaning: "허용하다, 허락하다", example: "Allow me to introduce myself." },
+            "allows": { base: "allow", phonetic: "/əˈlaʊ/", meaning: "허용하다", example: "The system allows multiple files." },
+            "allowed": { base: "allow", phonetic: "/əˈlaʊ/", meaning: "허락했다", example: "They allowed us inside." },
+            "enjoy": { base: "enjoy", phonetic: "/ɪnˈdʒɔɪ/", meaning: "즐기다", example: "Enjoy the break." },
+            "enjoys": { base: "enjoy", phonetic: "/ɪnˈdʒɔɪ/", meaning: "즐긴다", example: "He enjoys reading." },
+            "enjoyed": { base: "enjoy", phonetic: "/ɪnˈdʒɔɪ/", meaning: "즐겼다", example: "We enjoyed the time." },
+            "avoid": { base: "avoid", phonetic: "/əˈvɔɪ/", meaning: "피하다", example: "Avoid traffic jams." },
+            "avoids": { base: "avoid", phonetic: "/əˈvɔɪ/", meaning: "피하다", example: "She avoids crowds." },
+            "avoided": { base: "avoid", phonetic: "/əˈvɔɪ/", meaning: "피했다", example: "They avoided trouble." }
+        };
+
+        // Initial Default Dataset (Literal Translation / Literal / (Natural Translation) format)
+        let practiceData = [
+            {
+                chunks: [
+                    { text: "These days,", tips: "쉼표(,)가 있으므로 살짝 쉬어줍니다. These의 th는 진동이 있는 소리입니다." },
+                    { text: "almost every student", tips: "almost의 'ol'에 강세를 세게 주시고, every는 '에브리'처럼 2음절로 빠르게 발음하세요." },
+                    { text: "has a smartphone.", tips: "has a는 [해자]로 연음 처리합니다. smartphone의 p는 바람을 강하게 내뱉으세요." }
+                ],
+                fullText: "These days, almost every student has a smartphone.",
+                translation: "요즘에는, / 거의 모든 학생들은 / 스마트폰을 가지고 있습니다. (요즘에는 거의 모든 학생들이 스마트폰을 가지고 있습니다.)"
+            },
+            {
+                chunks: [
+                    { text: "Some people say", tips: "Some people의 p는 부드럽게 넘어가며, say의 s 발음을 정확하게 뿜어줍니다." },
+                    { text: "phones are helpful,", tips: "phones are는 [폰자] 형태로 매끄럽게 잇고, helpful의 l 사운드는 혀를 윗니 뒤에 붙여 끝맺습니다." },
+                    { text: "but others think", tips: "but others의 t는 부드럽게 플랩 현상이 일어나며, think의 th는 번데기 발음(무성음)입니다." },
+                    { text: "they cause many problems.", tips: "they는 [데이]처럼 th 진동을 살리고, problems의 p와 r 발음을 확실하게 구분해 줍니다." }
+                ],
+                fullText: "Some people say phones are helpful, but others think they cause many problems.",
+                translation: "어떤 사람들은 말합니다 / 휴대폰이 유용하다고, / 하지만 다른 사람들은 생각합니다 / 그것들이 많은 문제를 일으킨다고. (어떤 이들은 휴대폰이 도움이 된다고 말하지만, 다른 이들은 그것들이 많은 문제를 일으킨다고 생각합니다.)"
+            },
+            {
+                chunks: [
+                    { text: "On the good side,", tips: "On the는 [온 더]로 부드럽게 붙이고, side의 d는 강하게 내지 않고 멈추는 느낌으로 냅니다." },
+                    { text: "smartphones help students", tips: "smartphones의 s와 help의 p가 연달아 올 때 호흡을 조절하고, help와 students 사이를 매끄럽게 연결합니다." },
+                    { text: "find information quickly.", tips: "information의 f 발음(윗니로 아랫입술 물기)과 quickly의 q[kw] 발음에 유의합니다." }
+                ],
+                fullText: "On the good side, smartphones help students find information quickly.",
+                translation: "좋은 면을 보면, / 스마트폰은 돕습니다 / 학생들이 정보를 빠르게 찾도록. (좋은 점을 보자면, 스마트폰은 학생들이 정보를 빠르게 찾도록 돕습니다.)"
+            },
+            {
+                chunks: [
+                    { text: "If a student", tips: "If a는 [이파]로 강하게 연음 처리합니다." },
+                    { text: "does not understand a word,", tips: "understand a는 [언더스탠더]로 부드럽게 이어 발음하며, word의 r 발음을 살려 혀를 굴려줍니다." },
+                    { text: "he can search for it", tips: "search for는 [써얼치 포어]로 흐르듯 발음하고, for it은 [포릿]으로 연음합니다." },
+                    { text: "right away.", tips: "right away는 [라이더웨이]처럼 t가 부드러운 r 사운드로 바뀌어 연음됩니다." }
+                ],
+                fullText: "If a student does not understand a word, he can search for it right away.",
+                translation: "만약 한 학생이 / 이해하지 못한다면 단어를, / 그는 그것을 검색할 수 있습니다 / 즉시. (학생이 단어를 모르면 즉시 찾아볼 수 있습니다.)"
+            },
+            {
+                chunks: [
+                    { text: "Phones also keep students safe", tips: "keep과 students의 s 사운드를 연결해주고, safe의 f 발음 시 바람 소리가 충분히 나게 합니다." },
+                    { text: "because they can call", tips: "because의 c에 강세를 주며, they can call의 l 발음은 혀를 윗니 뒤 천장에 댑니다." },
+                    { text: "their parents after school.", tips: "parents of r 발음과 after of f 발음에 집중하며 매끄럽게 내려옵니다." }
+                ],
+                fullText: "Phones also keep students safe because they can call their parents after school.",
+                translation: "휴대폰은 또한 지켜줍니다 / 학생들이 안전하도록 / 왜냐하면 그들이 전화할 수 있기 때문에 / 그들의 부모님에게 방과 후에. (방과 후에 부모님께 전화할 수 있으므로 학생들을 안전하게 지켜주기도 합니다.)"
+            },
+            {
+                chunks: [
+                    { text: "However,", tips: "H에 호흡을 싣고 [하우에버]로 발음하며, 쉼표에서 살짝 쉽니다." },
+                    { text: "smartphones can be", tips: "smartphones의 s에 강세를 두고 can be는 비교적 가볍고 빠르게 발음합니다." },
+                    { text: "very distracting.", tips: "very의 v 발음(아랫입술 물기)과 distracting의 tr[츄] 발음에 주의하세요." }
+                ],
+                fullText: "However, smartphones can be very distracting.",
+                translation: "하지만, / 스마트폰은 될 수 있습니다 / 매우 주의를 분산시키게. (하지만 스마트폰은 매우 주의를 산만하게 만들 수도 있습니다.)"
+            },
+            {
+                chunks: [
+                    { text: "Many children play games", tips: "children의 r 발음과 play의 l 발음 차이에 유의하여 발음합니다." },
+                    { text: "or watch videos during class.", tips: "or watch는 [오어 와치]로 잇고, videos의 v와 class의 l 사운드를 정확히 발음합니다." }
+                ],
+                fullText: "Many children play games or watch videos during class.",
+                translation: "많은 아이들은 합니다 게임을 / 혹은 봅니다 동영상을 / 수업 중에. (많은 아이들이 수업 시간에 게임을 하거나 영상을 봅니다.)"
+            },
+            {
+                chunks: [
+                    { text: "They have lost their focus,", tips: "lost의 l 발음 시 혀를 앞니 뒤에 대고 떼며, focus의 o는 이중모음 [오우]로 냅니다." },
+                    { text: "and their grades have dropped.", tips: "grades의 gr 발음과 dropped의 dr[쥬롭트] 사운드에 주의하여 발음합니다." }
+                ],
+                fullText: "They have lost their focus, and their grades have dropped.",
+                translation: "그들은 잃었습니다 / 그들의 집중력을, / 그리고 그들의 성적은 / 떨어졌습니다. (아이들은 집중력을 잃었고, 성적은 떨어졌습니다.)"
+            },
+            {
+                chunks: [
+                    { text: "In my opinion,", tips: "opinion의 피[pi] 부분에 강세를 줍니다. [인 마이 오피니언]" },
+                    { text: "schools should allow phones", tips: "should의 l은 묵음이므로 발음하지 않고 [슈드]로 냅니다. allow의 l 발음에 유의합니다." },
+                    { text: "only during break time.", tips: "only의 o는 [오운리]로 부드럽게, break의 r 발음은 혀 굴리기를 적용합니다." }
+                ],
+                fullText: "In my opinion, schools should allow phones only during break time.",
+                translation: "내 의견으로는, / 학교들은 허용해야 합니다 휴대폰을 / 오직 쉬는 시간 동안만. (제 생각에 학교는 쉬는 시간에만 휴대폰을 허용해야 합니다.)"
+            },
+            {
+                chunks: [
+                    { text: "That way,", tips: "That의 th 발음과 way의 w 발음을 쫀득하게 연결하여 발음합니다." },
+                    { text: "students can enjoy the good parts", tips: "enjoy의 j[쥐] 발음에 유의하고, parts의 r 사운드와 복수 s를 챙겨 줍니다." },
+                    { text: "and avoid the bad ones.", tips: "avoid의 v 발음과 bad의 애[æ] 장모음 발음에 신경 씁니다." }
+                ],
+                fullText: "That way, students can enjoy the good parts and avoid the bad ones.",
+                translation: "그런 방식으로, / 학생들은 누릴 수 있습니다 좋은 부분들을 / 그리고 피할 수 있습니다 나쁜 부분들을. (그렇게 함으로써 학생들은 좋은 점은 누리고 나쁜 점은 피할 수 있습니다.)"
+            }
+        ];
+
+        let currentIndex = 0;
+        let activeChunkIndex = 0;
+        let isRecording = false;
+        let practiceMode = 'chunk'; // 'chunk' or 'full'
+        
+        // Online Speech API
+        const synth = window.speechSynthesis;
+        let recognition = null;
+
+        // Local Web Audio Recorder variables
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        // DOM elements
+        const sentenceContainer = document.getElementById('sentenceContainer');
+        const translationContainer = document.getElementById('translationContainer');
+        const tipsList = document.getElementById('tipsList');
+        const stepIndicator = document.getElementById('stepIndicator');
+        const progressBar = document.getElementById('progressBar');
+        
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const btnListen = document.getElementById('btnListen');
+        const btnSpeak = document.getElementById('btnSpeak');
+        const listenText = document.getElementById('listenText');
+        const speakText = document.getElementById('speakText');
+        
+        const modeChunk = document.getElementById('modeChunk');
+        const modeFull = document.getElementById('modeFull');
+        
+        const feedbackPanel = document.getElementById('feedbackPanel');
+        const feedbackTarget = document.getElementById('feedbackTarget');
+        const scoreBadge = document.getElementById('scoreBadge');
+        const comparisonResult = document.getElementById('comparisonResult');
+        const userTranscript = document.getElementById('userTranscript');
+
+        // Verb Dictionary DOM
+        const verbListContainer = document.getElementById('verbListContainer');
+        const verbDictionaryCard = document.getElementById('verbDictionaryCard');
+
+        // Collapsible Editor Elements (At the top)
+        const editorHeader = document.getElementById('editorHeader');
+        const editorContent = document.getElementById('editorContent');
+        const editorIcon = document.getElementById('editorIcon');
+        const txtEditorInput = document.getElementById('txtEditorInput');
+        const btnUpdateSentences = document.getElementById('btnUpdateSentences');
+
+        // Render Current State
+        function renderSentence() {
+            if (practiceData.length === 0) {
+                sentenceContainer.innerHTML = '연습할 지문이 없습니다. 위 지문 편집기에서 문장을 추가해 주세요.';
+                translationContainer.textContent = '';
+                tipsList.innerHTML = '';
+                verbListContainer.innerHTML = '';
+                return;
+            }
+
+            const data = practiceData[currentIndex];
+            
+            // Progress Bar
+            const progress = ((currentIndex + 1) / practiceData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            stepIndicator.textContent = `Sentence ${currentIndex + 1} of ${practiceData.length}`;
+            
+            // Render translation formatted as Literal (Natural)
+            formatTranslationDisplay(data.translation);
+            
+            // Render chunks
+            sentenceContainer.innerHTML = '';
+            if (practiceMode === 'full') {
+                sentenceContainer.className = "sentence-display full-mode";
+            } else {
+                sentenceContainer.className = "sentence-display";
+            }
+
+            data.chunks.forEach((chunk, index) => {
+                const chunkSpan = document.createElement('span');
+                chunkSpan.className = 'chunk';
+                
+                if (practiceMode === 'chunk') {
+                    if (index === activeChunkIndex) chunkSpan.classList.add('active');
+                    chunkSpan.addEventListener('click', () => selectChunk(index));
+                }
+                
+                chunkSpan.textContent = chunk.text;
+                sentenceContainer.appendChild(chunkSpan);
+                if (index < data.chunks.length - 1) {
+                    sentenceContainer.appendChild(document.createTextNode(' '));
+                }
+            });
+
+            // Render Tips, Verbs & Update Texts
+            renderTips();
+            renderVerbs(data.fullText);
+            updateControlTexts();
+            
+            // Nav buttons state
+            btnPrev.disabled = currentIndex === 0;
+            btnNext.disabled = currentIndex === practiceData.length - 1;
+            
+            feedbackPanel.style.display = 'none';
+        }
+
+        // Split literal translation and natural translation (represented in parenthesis)
+        function formatTranslationDisplay(translationStr) {
+            translationContainer.innerHTML = '';
+            if (!translationStr) {
+                translationContainer.style.display = 'none';
+                return;
+            }
+            translationContainer.style.display = 'block';
+
+            let literalPart = translationStr;
+            let naturalPart = "";
+
+            // Check if there is an 의역 (natural translation) enclosed in parenthesis
+            const parenIndex = translationStr.lastIndexOf('(');
+            if (parenIndex !== -1 && translationStr.endsWith(')')) {
+                literalPart = translationStr.substring(0, parenIndex).trim();
+                naturalPart = translationStr.substring(parenIndex + 1, translationStr.length - 1).trim();
+            }
+
+            const literalSpan = document.createElement('span');
+            literalSpan.className = 'literal-highlight';
+            literalSpan.innerHTML = `${literalPart}`;
+            translationContainer.appendChild(literalSpan);
+
+            if (naturalPart) {
+                const naturalSpan = document.createElement('span');
+                naturalSpan.className = 'natural-highlight';
+                naturalSpan.innerHTML = `(${naturalPart})`;
+                translationContainer.appendChild(naturalSpan);
+            }
+        }
+
+        function selectChunk(index) {
+            if (practiceMode !== 'chunk') return;
+            activeChunkIndex = index;
+            const chunks = sentenceContainer.querySelectorAll('.chunk');
+            chunks.forEach((c, idx) => {
+                if (idx === index) c.classList.add('active');
+                else c.classList.remove('active');
+            });
+            renderTips();
+            feedbackPanel.style.display = 'none';
+        }
+
+        function renderTips() {
+            tipsList.innerHTML = '';
+            if (practiceData.length === 0) return;
+            
+            const data = practiceData[currentIndex];
+            
+            if (practiceMode === 'chunk') {
+                const activeChunk = data.chunks[activeChunkIndex];
+                if (activeChunk) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>[선택 구간: ${activeChunk.text.trim()}]</strong><br>${activeChunk.tips || "부드러운 연음 처리에 유의하여 자신감 있게 읽어보세요!"}`;
+                    tipsList.appendChild(li);
+                }
+            } else {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>[전체 문장 발음 팁]</strong><br>문장 전체의 끊어 읽는 흐름(/ 표시 구간)을 의식하며, 단어 간 연음 및 억양을 자연스럽게 묶어 발음하세요.`;
+                tipsList.appendChild(li);
+
+                // List individual chunk tips as reference
+                data.chunks.forEach((c, i) => {
+                    if (c.tips) {
+                        const subLi = document.createElement('li');
+                        subLi.innerHTML = `<small>구간 ${i+1} (${c.text.trim()}): ${c.tips}</small>`;
+                        tipsList.appendChild(subLi);
+                    }
+                });
+            }
+        }
+
+        // Parse and render verbs in the sentence
+        function renderVerbs(sentenceText) {
+            verbListContainer.innerHTML = '';
+            if (!sentenceText) {
+                verbDictionaryCard.style.display = 'none';
+                return;
+            }
+
+            // Simple tokenizer
+            const cleanedText = sentenceText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g," ").toLowerCase();
+            const words = cleanedText.split(/\s+/).filter(w => w.length > 0);
+            
+            // Find verbs matching our local DB
+            const detectedVerbs = [];
+            const processedBases = new Set(); // Prevent duplicates
+            
+            words.forEach(word => {
+                if (commonVerbsDB[word]) {
+                    const verbData = commonVerbsDB[word];
+                    if (!processedBases.has(verbData.base)) {
+                        detectedVerbs.push({
+                            matchedWord: word,
+                            ...verbData
+                        });
+                        processedBases.add(verbData.base);
+                    }
+                }
+            });
+
+            if (detectedVerbs.length === 0) {
+                verbDictionaryCard.style.display = 'none';
+                return;
+            }
+
+            verbDictionaryCard.style.display = 'block';
+            
+            detectedVerbs.forEach(v => {
+                const verbItem = document.createElement('div');
+                verbItem.className = 'verb-item';
+                
+                const displayWord = v.matchedWord !== v.base ? `${v.matchedWord} (원형: ${v.base})` : v.base;
+                
+                verbItem.innerHTML = `
+                    <div class="verb-header-row">
+                        <span class="verb-word">${displayWord}</span>
+                        <span class="verb-phonetic">${v.phonetic}</span>
+                        <span class="verb-meaning">${v.meaning}</span>
+                    </div>
+                    <div class="verb-example">
+                        <i class="fa-solid fa-play"></i> <span>예문: ${v.example}</span>
+                    </div>
+                `;
+                verbListContainer.appendChild(verbItem);
+            });
+        }
+
+        function updateControlTexts() {
+            if (practiceMode === 'chunk') {
+                listenText.textContent = "구절 듣기";
+                speakText.textContent = "구절 평가";
+            } else {
+                listenText.textContent = "전체 듣기";
+                speakText.textContent = "전체 평가";
+            }
+        }
+
+        // Toggle Practice Mode
+        modeChunk.addEventListener('click', () => {
+            practiceMode = 'chunk';
+            modeChunk.classList.add('active');
+            modeFull.classList.remove('active');
+            activeChunkIndex = 0;
+            renderSentence();
+        });
+
+        // Full mode
+        modeFull.addEventListener('click', () => {
+            practiceMode = 'full';
+            modeFull.classList.add('active');
+            modeChunk.classList.remove('active');
+            renderSentence();
+        });
+
+        // Speech TTS
+        function speakTextHandler() {
+            synth.cancel();
+            if (practiceData.length === 0) return;
+
+            const data = practiceData[currentIndex];
+            let textToSpeak = "";
+
+            if (practiceMode === 'chunk') {
+                textToSpeak = data.chunks[activeChunkIndex].text;
+            } else {
+                textToSpeak = data.fullText;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85;
+
+            const voices = synth.getVoices();
+            const englishVoice = voices.find(voice => voice.lang.startsWith('en-US')) || voices.find(voice => voice.lang.startsWith('en'));
+            if (englishVoice) {
+                utterance.voice = englishVoice;
+            }
+
+            if (practiceMode === 'chunk') {
+                const activeSpan = sentenceContainer.querySelectorAll('.chunk')[activeChunkIndex];
+                if (activeSpan) {
+                    utterance.onstart = () => activeSpan.style.textShadow = '0 0 10px rgba(255, 255, 255, 0.8)';
+                    utterance.onend = () => activeSpan.style.textShadow = 'none';
+                }
+            } else {
+                utterance.onstart = () => sentenceContainer.style.opacity = '0.7';
+                utterance.onend = () => sentenceContainer.style.opacity = '1';
+            }
+
+            synth.speak(utterance);
+        }
+
+        btnListen.addEventListener('click', speakTextHandler);
+
+        // ====================================================
+        // Speech Recognition Flow (Handles online or local fallback)
+        // ====================================================
+        function handleSpeechRecording() {
+            if (isRecording) {
+                if (window.useLocalWhisper) {
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                    }
+                } else {
+                    if (recognition) {
+                        recognition.stop();
+                    }
+                }
+                return;
+            }
+
+            if (window.useLocalWhisper) {
+                startLocalWhisperRecording();
+            } else {
+                startGoogleSpeechAPI();
+            }
+        }
+
+        // 1. Online Google Speech API
+        function startGoogleSpeechAPI() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                window.switchToLocalWhisperEngine(false);
+                startLocalWhisperRecording();
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                btnSpeak.classList.add('recording');
+                speakText.textContent = '듣는 중...';
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                btnSpeak.classList.remove('recording');
+                updateControlTexts();
+            };
+
+            recognition.onresult = (event) => {
+                const userSpeech = event.results[0][0].transcript;
+                analyzeSpeech(userSpeech);
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error", event.error);
+                
+                if (event.error === 'network') {
+                    console.warn("Google STT Connection failed. Switching to Local On-device AI (Whisper) model.");
+                    window.switchToLocalWhisperEngine(true);
+                    alert("🌐 구글 음성인식 서버 연결 오류가 감지되었습니다.\n\n로컬 PC 보안 환경(회사 방화벽/VPN 등)에 따른 연결 제한이 발생한 상태입니다.\n\n보다 원활한 학습을 위해 인터넷 연결이 필요 없는 [온디바이스 로컬 AI (Whisper)] 모드로 자동 전환합니다. 다시 한 번 [발음 평가받기] 버튼을 누르시면 로컬에서 음성 분석이 시작됩니다.");
+                } else if (event.error === 'not-allowed') {
+                    alert("🎤 마이크 접근 권한이 차단되었습니다.\n\n주소창 좌측 설정 아이콘을 클릭하여 마이크 권한을 허용한 뒤 시도해 주세요.");
+                } else if (event.error === 'no-speech') {
+                    alert("🔇 감지된 목소리가 없습니다. 마이크가 제대로 작동하고 있는지 확인해 주세요.");
+                }
+            };
+
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error("Google STT startup failed", e);
+                window.switchToLocalWhisperEngine(false);
+                startLocalWhisperRecording();
+            }
+        }
+
+        // 2. Offline On-device Whisper AI
+        async function startLocalWhisperRecording() {
+            if (!window.whisperPipeline) {
+                try {
+                    await window.loadWhisperModel();
+                } catch (e) {
+                    alert("AI 모델 로딩 중 실패하여 녹음을 진행할 수 없습니다: " + e.message);
+                    return;
+                }
+            }
+
+            audioChunks = [];
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    isRecording = false;
+                    btnSpeak.classList.remove('recording');
+                    speakText.textContent = 'AI 연산 중...';
+                    
+                    stream.getTracks().forEach(track => track.stop());
+
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    
+                    try {
+                        const transcribedText = await runLocalWhisperTranscribe(audioBlob);
+                        if (transcribedText) {
+                            analyzeSpeech(transcribedText);
+                        } else {
+                            alert("발음 텍스트를 추출하는 데 실패했습니다. 다시 말씀해 보세요.");
+                        }
+                    } catch (err) {
+                        console.error("Local inference error:", err);
+                        alert("온디바이스 발음 연산 중 에러 발생: " + err.message);
+                    }
+                    updateControlTexts();
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                btnSpeak.classList.add('recording');
+                speakText.textContent = '말씀해 주세요...';
+            } catch (err) {
+                console.error("Local mic stream error:", err);
+                alert("마이크 사용 권한이 필요합니다. 브라우저 설정을 확인해 주세요.");
+            }
+        }
+
+        async function convertAudioBlobToWhisperInput(audioBlob) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            return audioBuffer.getChannelData(0);
+        }
+
+        async function runLocalWhisperTranscribe(audioBlob) {
+            if (!window.whisperPipeline) return null;
+            const rawAudioData = await convertAudioBlobToWhisperInput(audioBlob);
+            const output = await window.whisperPipeline(rawAudioData, {
+                chunk_length_s: 30,
+                stride_length_s: 5,
+                language: 'english',
+                task: 'transcribe'
+            });
+            return output.text;
+        }
+
+        btnSpeak.addEventListener('click', handleSpeechRecording);
+
+        // Speech Match Analysis
+        function analyzeSpeech(speechText) {
+            if (practiceData.length === 0) return;
+            const data = practiceData[currentIndex];
+            
+            let targetText = "";
+            if (practiceMode === 'chunk') {
+                targetText = data.chunks[activeChunkIndex].text;
+                feedbackTarget.textContent = `구절 발음 평가 (${activeChunkIndex + 1}/${data.chunks.length})`;
+            } else {
+                targetText = data.fullText;
+                feedbackTarget.textContent = "전체 문장 발음 평가";
+            }
+
+            // Clean texts
+            const cleanTarget = targetText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().trim();
+            const cleanSpeech = speechText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().trim();
+            
+            const targetWords = cleanTarget.split(/\s+/).filter(w => w.length > 0);
+            const speechWords = cleanSpeech.split(/\s+/).filter(w => w.length > 0);
+            
+            let matchCount = 0;
+            let resultHTML = '';
+            
+            targetWords.forEach(word => {
+                if (speechWords.includes(word)) {
+                    matchCount++;
+                    resultHTML += `<span class="word-match">${word}</span> `;
+                } else {
+                    resultHTML += `<span class="word-mismatch">${word}</span> `;
+                }
+            });
+            
+            const score = targetWords.length > 0 ? Math.round((matchCount / targetWords.length) * 100) : 0;
+            
+            // Show UI
+            feedbackPanel.style.display = 'block';
+            userTranscript.innerHTML = `내가 발음한 내용: "<strong>${speechText}</strong>"`;
+            comparisonResult.innerHTML = resultHTML;
+            
+            scoreBadge.textContent = `${score}% Match`;
+            scoreBadge.className = 'score-badge';
+            if (score >= 80) {
+                scoreBadge.classList.add('score-high');
+            } else if (score >= 55) {
+                scoreBadge.classList.add('score-mid');
+            } else {
+                scoreBadge.classList.add('score-low');
+            }
+        }
+
+        // Navigation
+        btnPrev.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                activeChunkIndex = 0;
+                renderSentence();
+            }
+        });
+
+        btnNext.addEventListener('click', () => {
+            if (currentIndex < practiceData.length - 1) {
+                currentIndex++;
+                activeChunkIndex = 0;
+                renderSentence();
+            }
+        });
+
+        // Collapsible Editor Toggle (At the top)
+        editorHeader.addEventListener('click', () => {
+            editorContent.classList.toggle('open');
+            if (editorContent.classList.contains('open')) {
+                editorIcon.className = "fa-solid fa-chevron-up";
+            } else {
+                editorIcon.className = "fa-solid fa-chevron-down";
+            }
+        });
+
+        // Free Translation API function
+        async function translateText(text) {
+            if (!text.trim()) return "";
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(text)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                let result = "";
+                if (data && data[0]) {
+                    data[0].forEach(item => {
+                        if (item[0]) result += item[0];
+                    });
+                }
+                return result.trim();
+            } catch (e) {
+                console.error("Translation API error:", e);
+                return "번역 실패";
+            }
+        }
+
+        // Sentence Parser & Updater (Now with dynamic AI translation)
+        // Smart Sentence Splitter (by punctuation . ! ?)
+        function splitIntoSentences(text) {
+            // Match typical English sentence endings followed by spaces or end of string
+            let matches = text.match(/[^.!?]+[.!?]+(?:\s+|$)/g) || [];
+            
+            // Catch trailing text that might not end with punctuation
+            const matchedLength = matches.reduce((acc, m) => acc + m.length, 0);
+            if (matchedLength < text.length) {
+                const remaining = text.substring(matchedLength).trim();
+                if (remaining.length > 0) {
+                    matches.push(remaining + ".");
+                }
+            }
+            return matches.map(s => s.trim()).filter(s => s.length > 0);
+        }
+
+        // Sentence Parser & Helper
+        async function processSingleSentenceData(englishLine, translationText) {
+            let chunkTexts = [];
+            if (englishLine.includes('/')) {
+                chunkTexts = englishLine.split('/').map(c => c.trim()).filter(c => c.length > 0);
+            } else {
+                // Auto chunking (split by words, approx 4 words per chunk)
+                const words = englishLine.split(/\s+/).filter(w => w.length > 0);
+                const chunksCount = Math.ceil(words.length / 4);
+                const wordsPerChunk = Math.ceil(words.length / chunksCount);
+                for (let j = 0; j < words.length; j += wordsPerChunk) {
+                    const chunkWords = words.slice(j, j + wordsPerChunk);
+                    chunkTexts.push(chunkWords.join(' '));
+                }
+            }
+
+            // If user supplied translation, use it. Otherwise, auto-translate.
+            let combinedTranslation = translationText;
+            if (!translationText) {
+                // Translate each chunk in parallel for literal translation
+                const chunkPromises = chunkTexts.map(chunk => translateText(chunk));
+                const translatedChunks = await Promise.all(chunkPromises);
+                const literalTranslation = translatedChunks.join(' / ');
+
+                // Translate the whole sentence for natural translation
+                const fullText = chunkTexts.join(' ');
+                const naturalTranslation = await translateText(fullText);
+
+                // Combine translations
+                combinedTranslation = `${literalTranslation} (${naturalTranslation})`;
+            }
+
+            const chunks = chunkTexts.map((text, idx) => {
+                return {
+                    text: text,
+                    tips: `구간 ${idx + 1} 발음 연습. 연음에 유의하여 편안하게 읽으세요.`
+                };
+            });
+
+            return {
+                chunks: chunks,
+                fullText: englishLine.replace(/\//g, "").replace(/\s+/g, " ").trim(),
+                translation: combinedTranslation
+            };
+        }
+
+        // Sentence Parser & Updater (Now with dynamic AI translation and auto sentence splitting)
+        btnUpdateSentences.addEventListener('click', async () => {
+            const rawText = txtEditorInput.value.trim();
+            if (!rawText) {
+                alert("지문을 입력해 주세요.");
+                return;
+            }
+
+            // UI Feedback during async operations
+            btnUpdateSentences.disabled = true;
+            btnUpdateSentences.textContent = "AI 번역 및 문장 분석 중... (잠시만 기다려 주세요)";
+
+            const newPracticeData = [];
+
+            try {
+                // Detect if the input contains Korean (usually indicates translation pairs by lines)
+                const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(rawText);
+                
+                if (hasKorean) {
+                    // Line-by-line mode (Either paired translation or english-only lines with ignored translation)
+                    const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    
+                    let isPairedFormat = false;
+                    if (lines.length >= 2) {
+                        isPairedFormat = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(lines[1]);
+                    }
+
+                    if (isPairedFormat) {
+                        for (let i = 0; i < lines.length; i += 2) {
+                            const englishLine = lines[i];
+                            const translationLine = (i + 1 < lines.length) ? lines[i + 1] : "";
+                            const parsed = await processSingleSentenceData(englishLine, translationLine);
+                            newPracticeData.push(parsed);
+                        }
+                    } else {
+                        // Extract only English-containing lines and auto-translate
+                        const englishLines = lines.filter(line => /[a-zA-Z]/.test(line));
+                        for (let i = 0; i < englishLines.length; i++) {
+                            const parsed = await processSingleSentenceData(englishLines[i], "");
+                            newPracticeData.push(parsed);
+                        }
+                    }
+                } else {
+                    // Pure English mode: Auto-split text into individual sentences based on punctuation (. ! ?)
+                    const sentences = splitIntoSentences(rawText);
+                    for (let i = 0; i < sentences.length; i++) {
+                        const parsed = await processSingleSentenceData(sentences[i], "");
+                        newPracticeData.push(parsed);
+                    }
+                }
+
+                if (newPracticeData.length > 0) {
+                    practiceData = newPracticeData;
+                    currentIndex = 0;
+                    activeChunkIndex = 0;
+                    renderSentence();
+                    editorContent.classList.remove('open');
+                    editorIcon.className = "fa-solid fa-chevron-down";
+                    setupDefaultEditorText(); // Sync back text area
+                    alert(`총 ${practiceData.length}개의 영어 문장 분석 및 자동 끊어 읽기 처리가 완료되었습니다!`);
+                } else {
+                    alert("영어 문장을 감지하지 못했습니다. 입력을 확인해 주세요.");
+                }
+            } catch (err) {
+                console.error("Translation loop error:", err);
+                alert("자동 번역 중 에러 발생: " + err.message);
+            } finally {
+                btnUpdateSentences.disabled = false;
+                btnUpdateSentences.textContent = "적용하여 새로 연습하기";
+            }
+        });
+
+        // Initialize editor textarea with default sentences format (English-only output since translation is auto-generated)
+        function setupDefaultEditorText() {
+            let defaultTextStr = "";
+            practiceData.forEach((d) => {
+                const chunkStr = d.chunks.map(c => c.text.trim()).join(' / ');
+                defaultTextStr += chunkStr + "\n";
+            });
+            txtEditorInput.value = defaultTextStr.trim();
+        }
+
+        // Start
+        setupDefaultEditorText();
+        renderSentence();
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = () => {};
+        }
+    </script>
+</body>
+</html>
