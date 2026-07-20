@@ -4,17 +4,17 @@
 
 **Live demo:** https://ragingwind.github.io/pronunciation_helper/
 
-The entire app is one static `index.html` — no build step, no server, no dependencies to install.
+The app itself is one static `index.html`. Practice material lives in `articles.md`; an optional Node build step pre-translates it into `data/articles.json` for instant loading.
 
 ## Features
 
+- **Article library** — pick a passage from `articles.md` (split into articles by `---`) and study it. Selecting an article loads its sentences into the practice flow.
 - **Chunk mode / Full mode** — practise a sentence one breath group at a time, or the whole sentence at once.
 - **Listen** — speaks the current chunk or sentence with the Web Speech API at 0.85× rate, preferring an `en-US` voice.
 - **Speak & score** — records you, transcribes, and highlights each target word as matched or missed. The score is the ratio of matched words (≥80% green, ≥55% amber, below that red).
 - **Dual speech engine with automatic fallback** — uses the browser's online `SpeechRecognition` by default, and switches to an on-device Whisper model when the network is blocked or the API is unavailable. A badge always shows which engine is active.
 - **Pronunciation tips** — per-chunk notes on linking, stress, and tricky consonants, written in Korean.
 - **Verb dictionary** — verbs in the current sentence are looked up in a built-in table and shown with base form, IPA, meaning, and an example sentence.
-- **Bring your own passage** — paste any English text in the editor at the top and it becomes the new practice set.
 
 ## Speech engines
 
@@ -26,45 +26,50 @@ The entire app is one static `index.html` — no build step, no server, no depen
 
 The app starts on the online engine. It switches to the local engine automatically when `SpeechRecognition` is missing from the browser, or when recognition fails with a `network` error — which is what typically happens behind a corporate firewall or VPN. Once switched, the model is preloaded in the background with a progress bar, so the next evaluation runs entirely on-device.
 
-## Using the passage editor
+## Editing the content
 
-Open **연습 문장 및 해석 업데이트** at the top and paste text in either format:
+All practice material lives in **`articles.md`**. Each article is one `# Title` heading followed by body paragraphs, and articles are separated by a `---` line:
 
-**English only** — text is split into sentences at `.` `!` `?`, and each sentence is translated automatically:
+```markdown
+# Should We Stop Using Plastic Bags?
 
-```
-These days, / almost every student / has a smartphone.
-Some people say / phones are helpful, / but others think / they cause many problems.
-```
+Plastic bags are everywhere in our lives. People use them at supermarkets...
 
-**English + Korean pairs** — odd lines English, even lines your own translation:
+---
 
-```
-These days, / almost every student / has a smartphone.
-요즘에는, / 거의 모든 학생들은 / 스마트폰을 가지고 있습니다. (요즘에는 거의 모든 학생들이 스마트폰을 가지고 있습니다.)
+# Should Students Use Smartphones at School?
+
+These days, almost every student has a smartphone...
 ```
 
-Rules the parser follows:
+To change the library, just edit `articles.md` — add, remove, or reorder articles. Each article body is split into sentences at `.` `!` `?`, each sentence is chunked at roughly four words, and Korean translations (literal `/`-aligned plus a natural version in parentheses) are generated automatically.
 
-- `/` marks a chunk boundary. Without any `/`, a sentence is chunked automatically at roughly four words.
-- In a translation line, text in trailing parentheses is shown as the natural translation (의역); everything before it is the literal, chunk-aligned translation (직독직해).
-- Korean anywhere in the input switches the parser to line-by-line mode; whether it treats lines as pairs depends on the second line being Korean.
-- When no translation is supplied, each chunk and the full sentence are translated separately so the literal/natural split still works.
+## How the app loads content
 
-## Running locally
+On startup the app tries two sources, in order:
 
-`index.html` has no build step, but it must be served over `http://` or `https://` — the microphone and the ES module import do not work from a `file://` URL.
+1. **`data/articles.json`** (preferred) — prebuilt by `npm run build`, with all translations baked in, so articles load instantly and no translation happens in the browser.
+2. **`articles.md`** (fallback) — if no prebuilt JSON is present, the app fetches the Markdown and translates each article live the first time it's selected.
 
-```sh
-python3 -m http.server 8000
-# open http://localhost:8000
-```
+Either way the app fetches over HTTP, so it can't run from a `file://` URL — use the dev server below.
+
+## Scripts
+
+Requires Node 18+ (uses the built-in `fetch`); there are no npm dependencies to install.
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start a no-cache static server at `http://localhost:8000` and rebuild `data/articles.json` whenever `articles.md` changes. Override the port with `PORT=3000 npm run dev`. |
+| `npm run build` | Read `articles.md`, translate every chunk and sentence, and write `data/articles.json`. |
+| `npm run deploy` | Rebuild the data, then commit `articles.md` + `data/articles.json` and push so GitHub Pages republishes. |
+
+Typical loop: `npm run dev`, edit `articles.md` (the app parses it live on refresh), then `npm run build` to bake translations and `npm run deploy` to publish.
 
 ## Deploying to GitHub Pages
 
 The app is served straight from the repository root:
 
-1. Push `index.html` to `main`.
+1. Push `index.html`, `articles.md`, and `data/articles.json` to `main` (or run `npm run deploy`).
 2. **Settings → Pages → Build and deployment → Source: Deploy from a branch**.
 3. Pick **`main`** and folder **`/ (root)`**, then Save.
 
@@ -80,13 +85,13 @@ Pages serves over HTTPS, which the microphone APIs require.
 
 ## Project structure
 
-Everything lives in `index.html`:
-
-| Section | Contents |
+| Path | Contents |
 |---|---|
-| `<style>` | Theme variables and layout (dark glassmorphism, 800px column) |
-| `<body>` | Notice banner, model loader, passage editor, practice card, feedback panel |
-| `<script type="module">` | Transformers.js import, Whisper loading, engine switching |
-| `<script>` | Verb DB, default passage, rendering, TTS, recording, scoring, parser |
+| `index.html` | The whole app — styles, markup, and two scripts (Whisper/engine module + main logic: verb DB, article loader, rendering, TTS, recording, scoring). |
+| `articles.md` | Practice content — articles separated by `---`. Edit this to change what users study. |
+| `data/articles.json` | Prebuilt practice data (generated; loaded by the app for instant startup). |
+| `scripts/build.mjs` | Parses `articles.md` and writes `data/articles.json`, translating chunks and sentences. |
+| `scripts/dev-server.mjs` | No-cache static server with auto-rebuild on `articles.md` changes. |
+| `scripts/deploy.mjs` | Rebuilds data, then commits and pushes it. |
 
-State is a handful of variables — `practiceData`, `currentIndex`, `activeChunkIndex`, `practiceMode` — and `renderSentence()` redraws from them.
+Inside `index.html`, app state is a handful of variables — `articlesData`, `currentArticleIndex`, `practiceData`, `currentIndex`, `activeChunkIndex`, `practiceMode` — and `renderSentence()` redraws from them.

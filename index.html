@@ -69,24 +69,6 @@
             font-size: 0.95rem;
         }
 
-        .notice-banner {
-            background: rgba(129, 140, 248, 0.15);
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            color: #c7d2fe;
-            padding: 0.7rem 1.2rem;
-            border-radius: 16px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            line-height: 1.4;
-        }
-
-        .notice-banner i {
-            font-size: 1.1rem;
-            color: var(--accent-secondary);
-        }
-
         /* Model Loading Overlay/Indicator */
         .model-loading-indicator {
             background: rgba(245, 158, 11, 0.1);
@@ -123,78 +105,49 @@
             transition: width 0.2s ease;
         }
 
-        /* Collapsible Sentence Editor (At the top) */
-        .editor-section {
-            background: rgba(15, 23, 42, 0.4);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-        }
-
-        .editor-header {
-            padding: 0.8rem 1.2rem;
-            background: rgba(255, 255, 255, 0.02);
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            font-size: 0.95rem;
-            user-select: none;
-        }
-
-        .editor-header:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .editor-content {
-            padding: 1.2rem;
+        /* Article Selector (compact dropdown) */
+        .article-selector {
             display: none;
-            flex-direction: column;
-            gap: 0.8rem;
-            border-top: 1px solid var(--card-border);
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.2rem 0.2rem;
         }
 
-        .editor-content.open {
+        .article-selector-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
             display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
         }
 
-        textarea {
-            width: 100%;
-            height: 150px;
-            background: rgba(0, 0, 0, 0.3);
+        .article-selector-label i {
+            color: var(--accent-secondary);
+        }
+
+        .article-select {
+            flex: 1;
+            min-width: 0;
+            background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--card-border);
-            border-radius: 12px;
             color: var(--text-primary);
-            padding: 0.8rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 12px;
             font-family: inherit;
             font-size: 0.9rem;
-            resize: vertical;
-            line-height: 1.5;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
         }
 
-        textarea:focus {
-            outline: none;
+        .article-select:hover {
             border-color: var(--accent-primary);
         }
 
-        .update-btn {
-            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-            border: none;
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            align-self: flex-end;
-        }
-
-        .update-btn:hover {
-            transform: translateY(-1px);
+        .article-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
         }
 
         .card {
@@ -618,13 +571,6 @@
             <p>문장을 한 청크씩 끊어 듣고, 직접 말하며 발음을 교정해보세요.</p>
         </header>
 
-        <div class="notice-banner">
-            <i class="fa-solid fa-circle-info"></i>
-            <div>
-                <strong>로컬 AI 모드 탑재:</strong> 구글 연결 차단 시 인터넷 연결이 필요 없는 <strong>온디바이스 AI 발음 분석 엔진(Whisper)</strong>으로 자동 전환되어 평가를 진행합니다!
-            </div>
-        </div>
-
         <!-- Local Model Loading Info -->
         <div class="model-loading-indicator" id="modelLoadingIndicator">
             <div class="model-loading-title">
@@ -639,21 +585,14 @@
             <i class="fa-solid fa-triangle-exclamation"></i> 이 브라우저는 일부 음성 인식 API를 완벽하게 지원하지 않을 수 있습니다. <strong>Google Chrome</strong> 브라우저를 권장합니다.
         </div>
 
-        <!-- Sentence Editor (Moved to the Top) -->
-        <div class="editor-section">
-            <div class="editor-header" id="editorHeader">
-                <span><i class="fa-solid fa-pen-to-square"></i> 연습 문장 및 해석 업데이트</span>
-                <i class="fa-solid fa-chevron-down" id="editorIcon"></i>
-            </div>
-            <div class="editor-content" id="editorContent">
-                <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.4;">
-                    연습하고 싶은 <strong>영어 문장들만 한 줄씩</strong> 자유롭게 입력하셔도 되고, <strong>한글 번역을 함께 매칭</strong>하고 싶다면 영어 문장과 한글 해석을 번갈아 한 줄씩 적어주세요.
-                    <br>• <strong>영어 지문만 입력 시</strong>: 한 줄에 한 문장씩 적어주시면 됩니다. (슬래시 <code>/</code> 로 끊어 읽기 지정 가능)
-                    <br>• <strong>영어/한글 번역 함께 입력 시</strong>: 홀수 줄에는 영어 문장, 짝수 줄에는 한글 해석 [ 직독직해 (의역) 형태 권장 ] 순으로 적어주세요.
-                </p>
-                <textarea id="txtEditorInput" placeholder="영어 문장만 여러 줄 입력하거나, 한글 번역을 한 줄씩 번갈아 입력하세요...&#10;예시 1 (영어 지문만 입력):&#10;These days, / almost every student / has a smartphone.&#10;Some people say / phones are helpful, / but others think / they cause many problems.&#10;&#10;예시 2 (영어 + 번역 함께 입력):&#10;These days, / almost every student / has a smartphone.&#10;요즘에는, / 거의 모든 학생들은 / 스마트폰을 가지고 있습니다. (요즘에는 거의 모든 학생들이 스마트폰을 가지고 있습니다.)"></textarea>
-                <button class="update-btn" id="btnUpdateSentences">적용하여 새로 연습하기</button>
-            </div>
+        <!-- Article Selector (populated from data/articles.json or articles.md) -->
+        <div class="article-selector" id="articleSelector">
+            <label class="article-selector-label" for="articleSelect">
+                <i class="fa-solid fa-newspaper"></i> 아티클
+            </label>
+            <select class="article-select" id="articleSelect">
+                <!-- Article options dynamically populated -->
+            </select>
         </div>
 
         <!-- Main Card -->
@@ -1097,12 +1036,11 @@
         const verbListContainer = document.getElementById('verbListContainer');
         const verbDictionaryCard = document.getElementById('verbDictionaryCard');
 
-        // Collapsible Editor Elements (At the top)
-        const editorHeader = document.getElementById('editorHeader');
-        const editorContent = document.getElementById('editorContent');
-        const editorIcon = document.getElementById('editorIcon');
-        const txtEditorInput = document.getElementById('txtEditorInput');
-        const btnUpdateSentences = document.getElementById('btnUpdateSentences');
+        // Article Selector Elements
+        const articleSelector = document.getElementById('articleSelector');
+        const articleSelect = document.getElementById('articleSelect');
+        let articlesData = [];       // [{ id, title, body, sentences|null }]
+        let currentArticleIndex = 0;
 
         // Render Current State
         function renderSentence() {
@@ -1585,16 +1523,6 @@
                 : "fa-solid fa-chevron-down";
         });
 
-        // Collapsible Editor Toggle (At the top)
-        editorHeader.addEventListener('click', () => {
-            editorContent.classList.toggle('open');
-            if (editorContent.classList.contains('open')) {
-                editorIcon.className = "fa-solid fa-chevron-up";
-            } else {
-                editorIcon.className = "fa-solid fa-chevron-down";
-            }
-        });
-
         // Free Translation API function
         async function translateText(text) {
             if (!text.trim()) return "";
@@ -1678,91 +1606,118 @@
             };
         }
 
-        // Sentence Parser & Updater (Now with dynamic AI translation and auto sentence splitting)
-        btnUpdateSentences.addEventListener('click', async () => {
-            const rawText = txtEditorInput.value.trim();
-            if (!rawText) {
-                alert("지문을 입력해 주세요.");
-                return;
-            }
+        // ====================================================
+        // Article loading (prebuilt data/articles.json, else live articles.md)
+        // ====================================================
 
-            // UI Feedback during async operations
-            btnUpdateSentences.disabled = true;
-            btnUpdateSentences.textContent = "AI 번역 및 문장 분석 중... (잠시만 기다려 주세요)";
-
-            const newPracticeData = [];
-
-            try {
-                // Detect if the input contains Korean (usually indicates translation pairs by lines)
-                const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(rawText);
-                
-                if (hasKorean) {
-                    // Line-by-line mode (Either paired translation or english-only lines with ignored translation)
-                    const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                    
-                    let isPairedFormat = false;
-                    if (lines.length >= 2) {
-                        isPairedFormat = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(lines[1]);
+        // Split raw articles.md into { title, body } blocks by '---' separators
+        function parseArticlesMarkdown(markdown) {
+            return markdown.split(/^\s*---\s*$/m).map(block => {
+                const lines = block.trim().split('\n');
+                let title = '';
+                const bodyLines = [];
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) continue;
+                    if (!title && trimmed.startsWith('#')) {
+                        title = trimmed.replace(/^#+\s*/, '').trim();
+                        continue;
                     }
-
-                    if (isPairedFormat) {
-                        for (let i = 0; i < lines.length; i += 2) {
-                            const englishLine = lines[i];
-                            const translationLine = (i + 1 < lines.length) ? lines[i + 1] : "";
-                            const parsed = await processSingleSentenceData(englishLine, translationLine);
-                            newPracticeData.push(parsed);
-                        }
-                    } else {
-                        // Extract only English-containing lines and auto-translate
-                        const englishLines = lines.filter(line => /[a-zA-Z]/.test(line));
-                        for (let i = 0; i < englishLines.length; i++) {
-                            const parsed = await processSingleSentenceData(englishLines[i], "");
-                            newPracticeData.push(parsed);
-                        }
-                    }
-                } else {
-                    // Pure English mode: Auto-split text into individual sentences based on punctuation (. ! ?)
-                    const sentences = splitIntoSentences(rawText);
-                    for (let i = 0; i < sentences.length; i++) {
-                        const parsed = await processSingleSentenceData(sentences[i], "");
-                        newPracticeData.push(parsed);
-                    }
+                    bodyLines.push(trimmed);
                 }
+                return { title, body: bodyLines.join(' '), sentences: null };
+            }).filter(article => article.title && article.body);
+        }
 
-                if (newPracticeData.length > 0) {
-                    practiceData = newPracticeData;
-                    currentIndex = 0;
-                    activeChunkIndex = 0;
-                    renderSentence();
-                    editorContent.classList.remove('open');
-                    editorIcon.className = "fa-solid fa-chevron-down";
-                    setupDefaultEditorText(); // Sync back text area
-                    alert(`총 ${practiceData.length}개의 영어 문장 분석 및 자동 끊어 읽기 처리가 완료되었습니다!`);
-                } else {
-                    alert("영어 문장을 감지하지 못했습니다. 입력을 확인해 주세요.");
-                }
-            } catch (err) {
-                console.error("Translation loop error:", err);
-                alert("자동 번역 중 에러 발생: " + err.message);
-            } finally {
-                btnUpdateSentences.disabled = false;
-                btnUpdateSentences.textContent = "적용하여 새로 연습하기";
+        // Build a single article's practice sentences on demand (live translation)
+        async function buildArticleSentences(article) {
+            if (article.sentences) return article.sentences;
+            const sentences = splitIntoSentences(article.body);
+            const built = [];
+            for (const sentence of sentences) {
+                built.push(await processSingleSentenceData(sentence, ""));
             }
+            article.sentences = built;
+            return built;
+        }
+
+        function renderArticleList() {
+            articleSelect.innerHTML = '';
+            articlesData.forEach((article, index) => {
+                const option = document.createElement('option');
+                option.value = String(index);
+                option.textContent = `${index + 1}. ${article.title}`;
+                articleSelect.appendChild(option);
+            });
+            articleSelect.value = String(currentArticleIndex);
+        }
+
+        articleSelect.addEventListener('change', () => {
+            selectArticle(Number(articleSelect.value));
         });
 
-        // Initialize editor textarea with default sentences format (English-only output since translation is auto-generated)
-        function setupDefaultEditorText() {
-            let defaultTextStr = "";
-            practiceData.forEach((d) => {
-                const chunkStr = d.chunks.map(c => c.text.trim()).join(' / ');
-                defaultTextStr += chunkStr + "\n";
-            });
-            txtEditorInput.value = defaultTextStr.trim();
+        async function selectArticle(index) {
+            if (index < 0 || index >= articlesData.length) return;
+            currentArticleIndex = index;
+            renderArticleList();
+
+            const article = articlesData[index];
+            if (!article.sentences) {
+                // Live path: translate & chunk this article now
+                sentenceContainer.className = "sentence-display";
+                sentenceContainer.innerHTML = '<span style="color: var(--text-secondary);"><i class="fa-solid fa-gear fa-spin"></i> 아티클 번역 및 끊어 읽기 분석 중...</span>';
+                translationContainer.innerHTML = '';
+                tipsList.innerHTML = '';
+                verbListContainer.innerHTML = '';
+                feedbackPanel.style.display = 'none';
+                try {
+                    await buildArticleSentences(article);
+                } catch (err) {
+                    console.error("Article build error:", err);
+                    sentenceContainer.textContent = '아티클 분석 중 오류가 발생했습니다: ' + err.message;
+                    return;
+                }
+            }
+
+            practiceData = article.sentences;
+            currentIndex = 0;
+            activeChunkIndex = 0;
+            renderSentence();
+        }
+
+        async function loadArticles() {
+            let loaded = null;
+
+            // 1) Prefer prebuilt data (fast, translations already baked)
+            try {
+                const res = await fetch('data/articles.json', { cache: 'no-cache' });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (Array.isArray(json.articles)) loaded = json.articles;
+                }
+            } catch (e) { /* fall through to live parsing */ }
+
+            // 2) Fallback: parse articles.md live (translated on selection)
+            if (!loaded) {
+                try {
+                    const res = await fetch('articles.md', { cache: 'no-cache' });
+                    if (res.ok) loaded = parseArticlesMarkdown(await res.text());
+                } catch (e) { /* no articles available */ }
+            }
+
+            if (loaded && loaded.length > 0) {
+                articlesData = loaded;
+                articleSelector.style.display = 'flex';
+                renderArticleList();
+                selectArticle(0);
+            } else {
+                articleSelector.style.display = 'none';
+            }
         }
 
         // Start
-        setupDefaultEditorText();
         renderSentence();
+        loadArticles();
         if (synth.onvoiceschanged !== undefined) {
             synth.onvoiceschanged = () => {};
         }
