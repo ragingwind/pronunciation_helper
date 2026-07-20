@@ -6,6 +6,46 @@
 
 The app itself is one static `index.html`. Practice material lives in `articles.md`; an optional Node build step pre-translates it into `data/articles.json` for instant loading.
 
+## Quick start
+
+Requires Node 18+. There are no dependencies to install.
+
+**Run it locally**
+
+```sh
+npm run dev
+# open http://localhost:8000
+```
+
+Leave this running while you work — it serves the app and rebuilds data automatically when `articles.md` changes.
+
+**Add a new article**
+
+1. Open `articles.md`.
+2. Add a `---` line after the last article, then a new one below it:
+
+   ```markdown
+   ---
+
+   # Your Article Title
+
+   Your English paragraph goes here. Write it as normal sentences —
+   they are split and chunked automatically.
+   ```
+
+3. Refresh the browser. The new article appears in the dropdown and is parsed live (translated on first selection).
+
+**Build and deploy**
+
+```sh
+npm run build    # bake translations into data/articles.json
+npm run deploy   # rebuild data, then commit & push (GitHub Pages publishes it)
+```
+
+`npm run deploy` does the build for you and pushes `articles.md` + `data/articles.json`. If you also changed the app (`index.html`) or scripts, commit and push those normally. GitHub Pages republishes within a few minutes of the push.
+
+> The three steps above are the whole loop: **edit `articles.md` → `npm run build` → `npm run deploy`.** The sections below explain each part in more detail.
+
 ## Features
 
 - **Article library** — pick a passage from `articles.md` (split into articles by `---`) and study it. Selecting an article loads its sentences into the practice flow.
