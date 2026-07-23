@@ -1,3 +1,14 @@
+# Should We Ban Zoos?
+Zoos are very popular places for families to see wild animals. However, many people today think we should close all zoos.
+
+On the good side, zoos protect endangered animals. They give them a safe place to live and good doctors. Also, children can learn to love nature by seeing real animals.
+
+On the bad side, keeping wild animals in cages is cruel. Animals need space to run and play. In zoos, they often feel lonely and bored.
+
+In my opinion, we should change how zoos work instead of closing them. Zoos should build larger spaces so animals can live happily. What do you think?
+
+---
+
 # Should We Stop Using Plastic Bags?
 
 Plastic bags are everywhere in our lives. People use them at supermarkets, bakeries, and even at school. However, many countries now want to stop using them. Why is that?
